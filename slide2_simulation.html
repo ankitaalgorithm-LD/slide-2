@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Module 3: What is a Feasibility Check - Slide 2 Simulation</title>
+<style>
+  /*
+    Same 3-color system as Slide 1:
+    1) Navy   #21295C  - dominant panel, text, primary button
+    2) Teal   #1C7293  - accent, highlights, active states
+    3) White  #FFFFFF  - canvas / content column / node fills
+
+    Panel graphic: hub-and-3-spokes network, mirroring the three
+    things a feasibility check determines - continuing the same
+    visual language introduced on Slide 1.
+  */
+  :root{
+    --navy: #21295C;
+    --navy-rgb: 33,41,92;
+    --teal: #1C7293;
+    --teal-rgb: 28,114,147;
+    --white: #FFFFFF;
+    --font: "Uber Move", "Uber Move Text", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: rgba(var(--navy-rgb), 0.10);
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--font);
+  }
+  .stage{
+    width: min(96vw, 1200px);
+    aspect-ratio: 16/9;
+    position: relative;
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(var(--navy-rgb), 0.3);
+    display:flex;
+    flex-direction:row;
+  }
+
+  /* ---------- LEFT: content column ---------- */
+  .content-col{
+    flex: 1 1 auto;
+    min-width: 0;
+    display:flex; flex-direction:column;
+    position:relative; z-index:2;
+    background: var(--white);
+  }
+
+  .content{
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    padding: 3.6% 6% 0 7%;
+    display:flex; flex-direction:column;
+  }
+
+  .kicker{
+    font-family: var(--font);
+    font-size: clamp(11px, 1.1vw, 14px);
+    font-weight:700;
+    letter-spacing: 3px;
+    color: var(--teal);
+    margin: 0;
+  }
+
+  h1{
+    font-family: var(--font);
+    font-weight:800;
+    font-size: clamp(19px, 2.5vw, 28px);
+    color: var(--navy);
+    margin: 1.4% 0 0 0;
+    line-height: 1.15;
+    transition: color .35s ease;
+  }
+  h1 .hl-box{
+    display:inline-block;
+    border-radius: 6px;
+    padding: 0 0.12em;
+    transition: background .4s ease, color .4s ease;
+  }
+  h1.highlight .hl-box{
+    background: var(--teal);
+    color: var(--white);
+  }
+
+  .subtitle{
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: clamp(11px, 1.05vw, 13px);
+    color: rgba(var(--navy-rgb), 0.6);
+    margin: 1.4% 0 0 0;
+    max-width: 96%;
+    line-height: 1.35;
+  }
+
+  .cards{
+    display:flex; flex-direction:column;
+    gap: 1.4%;
+    margin-top: 2.4%;
+    min-height: 0;
+  }
+  .card{
+    display:flex; align-items:flex-start; gap: 3.2%;
+    padding: 1.6% 3.6%;
+    border-radius: 10px;
+    background: rgba(var(--teal-rgb), 0.04);
+    border: 1px solid rgba(var(--teal-rgb), 0.16);
+    transition: background .35s ease, border-color .35s ease, transform .3s ease, box-shadow .35s ease;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: cardIn .55s ease forwards;
+  }
+  .card:nth-child(1){ animation-delay: .1s; }
+  .card:nth-child(2){ animation-delay: .28s; }
+  .card:nth-child(3){ animation-delay: .46s; }
+  @keyframes cardIn{
+    to{ opacity: 1; transform: translateY(0); }
+  }
+  .card.active{
+    background: rgba(var(--teal-rgb), 0.9);
+    border-color: var(--teal);
+    transform: translateX(4px);
+    box-shadow: 0 14px 30px rgba(var(--teal-rgb), 0.28);
+  }
+  .card-num{
+    flex: 0 0 auto;
+    width: 24px; height: 24px;
+    margin-top: 1px;
+    border-radius: 50%;
+    border: 1.6px solid rgba(var(--teal-rgb), 0.5);
+    color: var(--teal);
+    font-weight: 800;
+    font-size: 11.5px;
+    display:flex; align-items:center; justify-content:center;
+    transition: background .35s ease, border-color .35s ease, color .35s ease;
+  }
+  .card.active .card-num{
+    background: var(--white);
+    border-color: var(--white);
+    color: var(--teal);
+    animation: numPop .5s ease;
+  }
+  @keyframes numPop{
+    0%{ transform: scale(1); }
+    45%{ transform: scale(1.32); }
+    100%{ transform: scale(1); }
+  }
+  .card-text{ min-width: 0; flex: 1 1 auto; }
+  .card-text h3{
+    margin: 0;
+    font-family: var(--font);
+    font-size: clamp(12px, 1.2vw, 14.5px);
+    font-weight: 800;
+    color: var(--navy);
+    transition: color .35s ease;
+  }
+  .card-desc{
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height .4s ease, opacity .3s ease, margin-top .4s ease;
+    margin-top: 0;
+  }
+  .card.active .card-desc{
+    max-height: 40px;
+    opacity: 1;
+    margin-top: 0.3em;
+  }
+  .card-desc p{
+    margin: 0;
+    font-family: var(--font);
+    font-size: clamp(10.5px, 1vw, 11.5px);
+    color: rgba(255,255,255,0.88);
+    line-height: 1.35;
+  }
+  .card.active .card-text h3{ color: var(--white); }
+
+  .bottom-bar{
+    flex: 0 0 auto;
+    padding: 2.4% 6% 4.5% 7%;
+    display:flex; align-items:center; justify-content:space-between;
+    position:relative;
+    z-index:2;
+  }
+  .left-cluster{ display:flex; flex-direction:column; gap: 8px; }
+
+  .status{
+    font-family: var(--font);
+    font-size: clamp(11px, 1.15vw, 13px);
+    color: var(--teal);
+    opacity: 0;
+    transition: opacity .3s ease;
+    display:flex; align-items:center; gap:8px;
+    height: 16px;
+  }
+  .status.show{ opacity:1; }
+  .status .bars{ display:flex; gap:3px; align-items:flex-end; height:14px; }
+  .status .bars span{
+    display:block; width:3px; background: var(--teal); border-radius:2px;
+    animation: eq 0.9s ease-in-out infinite;
+  }
+  .status .bars span:nth-child(1){ height:6px; animation-delay: 0s; }
+  .status .bars span:nth-child(2){ height:14px; animation-delay: .15s; }
+  .status .bars span:nth-child(3){ height:9px; animation-delay: .3s; }
+  .status .bars span:nth-child(4){ height:13px; animation-delay: .45s; }
+  @keyframes eq{
+    0%,100%{ transform: scaleY(0.5); }
+    50%{ transform: scaleY(1); }
+  }
+
+  .start-row{ display:flex; align-items:center; gap: 12px; flex-wrap: nowrap; }
+  .start-btn{
+    font-family: var(--font);
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    font-weight:700;
+    font-size: clamp(12px, 1.3vw, 14.5px);
+    padding: 3.4% 7%;
+    border-radius: 999px;
+    cursor: pointer;
+    display:inline-flex; align-items:center; gap:10px;
+    transition: transform .15s ease, box-shadow .15s ease, opacity .2s ease, background .2s ease;
+    box-shadow: 0 10px 22px rgba(var(--navy-rgb), 0.28);
+    white-space: nowrap;
+  }
+  .start-btn:hover:not(:disabled){ transform: translateY(-2px); background: var(--teal); }
+  .start-btn:disabled{ opacity:0.5; cursor:default; }
+  .start-btn .tri{ font-size: 10px; line-height: 1; flex: 0 0 auto; margin-right: 2px; }
+
+  .tag{
+    font-family: var(--font);
+    font-size: clamp(9px, 1vw, 11px);
+    color: rgba(var(--navy-rgb), 0.4);
+    letter-spacing: 0.5px;
+  }
+
+  .replay-wrap{
+    opacity: 0; transform: scale(0.7); pointer-events: none;
+    transition: opacity .3s ease, transform .3s ease;
+    flex: 0 0 auto;
+  }
+  .replay-wrap.show{ opacity: 1; transform: scale(1); pointer-events: auto; }
+  .replay-btn{
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--teal); border: none; cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 10px 22px rgba(var(--teal-rgb), 0.32);
+    transition: transform .15s ease, background .2s ease;
+  }
+  .replay-btn:hover{ transform: translateY(-2px) rotate(-25deg); background: var(--navy); }
+  .replay-btn:disabled{ opacity:0.5; cursor:default; transform:none; }
+  .replay-btn svg{ width: 18px; height: 18px; display:block; }
+
+  /* ---------- RIGHT: navy panel ---------- */
+  .side-panel{
+    flex: 0 0 33%;
+    position: relative;
+    background:
+      radial-gradient(circle at 30% 18%, rgba(var(--teal-rgb), 0.35) 0%, rgba(var(--teal-rgb), 0) 55%),
+      var(--navy);
+    overflow: hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .panel-numeral{
+    position:absolute; top: 4%; left: 6%;
+    font-family: var(--font);
+    font-weight: 800;
+    font-size: clamp(70px, 9vw, 120px);
+    line-height: 1;
+    letter-spacing: -3px;
+    color: rgba(255,255,255,0.14);
+    user-select: none;
+    z-index: 0;
+  }
+  .network-svg{ position: relative; z-index: 1; width: 74%; height: auto; }
+  .network-svg .link{
+    stroke: rgba(255,255,255,0.3);
+    stroke-width: 1.6;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke .3s ease, stroke-dashoffset .55s ease;
+  }
+  .network-svg .link.active{
+    stroke: rgba(255,255,255,0.85);
+    stroke-width: 2.2;
+    stroke-dashoffset: 0;
+  }
+  .network-svg .node-hub{
+    fill: var(--teal);
+    transform-box: fill-box; transform-origin: center;
+    animation: pulse 3.2s ease-in-out infinite;
+  }
+  .network-svg .node-outline{
+    fill: none;
+    stroke: rgba(255,255,255,0.7);
+    stroke-width: 1.8;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: fill .3s ease, stroke .3s ease;
+  }
+  .network-svg .node-outline.active{
+    fill: var(--white);
+    stroke: var(--white);
+    animation: nodePop .5s ease;
+  }
+  @keyframes nodePop{
+    0%{ transform: scale(1); }
+    45%{ transform: scale(1.35); }
+    100%{ transform: scale(1); }
+  }
+  .network-svg .node-label{
+    fill: rgba(255,255,255,0.55);
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 15px;
+    transition: fill .3s ease;
+  }
+  .network-svg .node-label.active{ fill: var(--white); }
+  @keyframes pulse{
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(1.06); }
+  }
+  .panel-caption{
+    position:absolute; left: 8%; bottom: 6%; z-index: 1;
+    font-family: var(--font);
+    font-size: clamp(9px, 0.95vw, 11px);
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    color: rgba(255,255,255,0.55);
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+
+    <div class="content-col">
+      <div class="content">
+        <div class="kicker">GETTING ORIENTED</div>
+        <h1 id="title"><span class="hl-box" id="titleHL">What is a feasibility check?</span></h1>
+        <div class="subtitle">A feasibility check helps determine three things before a request moves forward.</div>
+
+        <div class="cards">
+          <div class="card" id="card1">
+            <div class="card-num">1</div>
+            <div class="card-text">
+              <h3>Can it be supported?</h3>
+              <div class="card-desc"><p>Whether the requirement can be supported at all.</p></div>
+            </div>
+          </div>
+          <div class="card" id="card2">
+            <div class="card-num">2</div>
+            <div class="card-text">
+              <h3>Existing capability?</h3>
+              <div class="card-desc"><p>Whether an existing capability can meet the requirement.</p></div>
+            </div>
+          </div>
+          <div class="card" id="card3">
+            <div class="card-num">3</div>
+            <div class="card-text">
+              <h3>Extra support needed?</h3>
+              <div class="card-desc"><p>Whether additional technical or product support is needed.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <div class="left-cluster">
+          <div class="status" id="status">
+            <span class="bars"><span></span><span></span><span></span><span></span></span>
+            Narrating&#8230;
+          </div>
+          <div class="start-row">
+            <button class="start-btn" id="startBtn">
+              <span class="tri">&#9654;</span>
+              <span id="btnLabel">Play Narration</span>
+            </button>
+            <div class="replay-wrap" id="replayWrap">
+              <button class="replay-btn" id="replayBtn" title="Replay narration" aria-label="Replay narration">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <span class="tag">MODULE 3 &middot; 02/13</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="panel-numeral">02</div>
+      <svg class="network-svg" viewBox="0 0 320 400" xmlns="http://www.w3.org/2000/svg">
+        <line class="link" id="link1" pathLength="1" x1="160" y1="200" x2="70" y2="90"></line>
+        <line class="link" id="link2" pathLength="1" x1="160" y1="200" x2="250" y2="150"></line>
+        <line class="link" id="link3" pathLength="1" x1="160" y1="200" x2="150" y2="330"></line>
+
+        <circle class="node-hub" cx="160" cy="200" r="28"></circle>
+
+        <circle class="node-outline" id="node1" cx="70" cy="90" r="20"></circle>
+        <text class="node-label" id="label1" x="70" y="96" text-anchor="middle">1</text>
+
+        <circle class="node-outline" id="node2" cx="250" cy="150" r="20"></circle>
+        <text class="node-label" id="label2" x="250" y="156" text-anchor="middle">2</text>
+
+        <circle class="node-outline" id="node3" cx="150" cy="330" r="20"></circle>
+        <text class="node-label" id="label3" x="150" y="336" text-anchor="middle">3</text>
+      </svg>
+      <div class="panel-caption">THREE-PART CHECK</div>
+    </div>
+
+  </div>
+
+<script>
+  const startBtn = document.getElementById('startBtn');
+  const replayWrap = document.getElementById('replayWrap');
+  const replayBtn = document.getElementById('replayBtn');
+  const status = document.getElementById('status');
+  const titleEl = document.getElementById('title');
+  const card1 = document.getElementById('card1');
+  const card2 = document.getElementById('card2');
+  const card3 = document.getElementById('card3');
+  const link1 = document.getElementById('link1');
+  const link2 = document.getElementById('link2');
+  const link3 = document.getElementById('link3');
+  const node1 = document.getElementById('node1');
+  const node2 = document.getElementById('node2');
+  const node3 = document.getElementById('node3');
+  const label1 = document.getElementById('label1');
+  const label2 = document.getElementById('label2');
+  const label3 = document.getElementById('label3');
+
+  const narration = "First, let's understand what a feasibility check helps us determine. The goal is to understand whether the project requirement can be supported, whether an existing capability can meet the need, or whether additional technical or product support is required.";
+
+  // Phrase order matches narration order, which also matches the
+  // top-to-bottom card order and the panel's node order (1, 2, 3).
+  const zones = [
+    { phrase: "feasibility check", els: [titleEl], panel: null },
+    { phrase: "the project requirement can be supported", els: [card1], panel: [link1, node1, label1] },
+    { phrase: "an existing capability can meet the need", els: [card2], panel: [link2, node2, label2] },
+    { phrase: "additional technical or product support is required", els: [card3], panel: [link3, node3, label3] }
+  ];
+
+  zones.forEach(z => {
+    const idx = narration.indexOf(z.phrase);
+    z.start = idx;
+    z.end = idx + z.phrase.length;
+  });
+
+  let activeEls = [];
+  let activePanelEls = [];
+  function clearHighlights(){
+    activeEls.forEach(el => el.classList.remove('highlight', 'active'));
+    activeEls = [];
+    activePanelEls.forEach(el => el.classList.remove('active'));
+    activePanelEls = [];
+  }
+  function setHighlight(els, panelEls){
+    clearHighlights();
+    els.forEach(el => {
+      el.classList.add(el.tagName === 'H1' ? 'highlight' : 'active');
+    });
+    activeEls = els;
+    if (panelEls){
+      panelEls.forEach(el => el.classList.add('active'));
+      activePanelEls = panelEls;
+    }
+  }
+
+  function highlightForCharIndex(ci){
+    for (const z of zones){
+      if (ci >= z.start && ci < z.end){
+        setHighlight(z.els, z.panel);
+        return;
+      }
+    }
+  }
+
+  let highlightTimers = [];
+  function clearHighlightTimers(){
+    highlightTimers.forEach(id => clearTimeout(id));
+    highlightTimers = [];
+  }
+  function estimateDurationMs(text, rate){
+    const words = text.trim().split(/\s+/).length;
+    const baseWpm = 148;
+    const adjustedWpm = baseWpm * (rate || 1);
+    return (words / adjustedWpm) * 60000;
+  }
+  function scheduleTimedHighlights(estimatedMs){
+    clearHighlightTimers();
+    zones.forEach(z => {
+      const frac = z.start / narration.length;
+      const id = setTimeout(() => highlightForCharIndex(z.start), frac * estimatedMs);
+      highlightTimers.push(id);
+    });
+  }
+
+  function setPlayingState(isPlaying){
+    startBtn.disabled = isPlaying;
+    replayBtn.disabled = isPlaying;
+    if (isPlaying){
+      status.classList.add('show');
+    } else {
+      status.classList.remove('show');
+      clearHighlightTimers();
+      clearHighlights();
+      replayWrap.classList.add('show');
+    }
+  }
+
+  function speakFallback(){
+    setPlayingState(true);
+    const totalMs = estimateDurationMs(narration, 0.95);
+    scheduleTimedHighlights(totalMs);
+    setTimeout(() => setPlayingState(false), totalMs + 300);
+  }
+
+  function pickBestVoice(voices){
+    if (!voices || !voices.length) return null;
+    const byName = (re) => voices.find(v => re.test(v.name));
+    const preferredNames = [
+      /Google US English/i, /Microsoft Aria/i, /Microsoft Jenny/i,
+      /Microsoft Guy/i, /Samantha/i, /Natural/i, /Neural/i, /Online \(Natural\)/i
+    ];
+    for (const re of preferredNames){
+      const v = byName(re);
+      if (v) return v;
+    }
+    const nonLocalEnglish = voices.find(v => /en(-|_)?US|en(-|_)?GB/i.test(v.lang) && v.localService === false);
+    if (nonLocalEnglish) return nonLocalEnglish;
+    const anyEnglish = voices.find(v => /^en/i.test(v.lang));
+    if (anyEnglish) return anyEnglish;
+    return voices[0];
+  }
+
+  function playNarration(){
+    if (!('speechSynthesis' in window)){
+      speakFallback();
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(narration);
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    const chosen = pickBestVoice(voices);
+    if (chosen) utter.voice = chosen;
+
+    utter.onstart = () => {
+      setPlayingState(true);
+      scheduleTimedHighlights(estimateDurationMs(narration, utter.rate));
+    };
+
+    utter.onboundary = (e) => {
+      if (e.name === 'word' || e.charIndex !== undefined){
+        highlightForCharIndex(e.charIndex);
+      }
+    };
+
+    utter.onend = () => setPlayingState(false);
+    utter.onerror = () => setPlayingState(false);
+
+    window.speechSynthesis.speak(utter);
+  }
+
+  if ('speechSynthesis' in window){
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => {};
+  }
+
+  startBtn.addEventListener('click', playNarration);
+  replayBtn.addEventListener('click', playNarration);
+</script>
+</body>
+</html>
